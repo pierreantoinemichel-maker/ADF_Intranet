@@ -1,17 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-const navItems = [
-  { href: "/entreprises", label: "Annuaire", icon: "🏛" },
-  { href: "/collaborateurs", label: "Collaborateurs", icon: "👥" },
-  { href: "/connaissances", label: "Base de savoirs", icon: "📚" },
-];
-
 export default function Header({ userEmail }: { userEmail?: string }) {
-  const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
   const initials = userEmail ? userEmail.slice(0, 2).toUpperCase() : "??";
@@ -39,25 +31,6 @@ export default function Header({ userEmail }: { userEmail?: string }) {
           </div>
         </div>
       </a>
-
-      {/* Nav */}
-      <nav className="flex gap-0.5 ml-4">
-        {navItems.map(({ href, label, icon }) => {
-          const active = pathname.startsWith(href);
-          return (
-            <Link key={href} href={href}
-              style={{
-                color: active ? "var(--gold-l)" : "var(--mid)",
-                background: active ? "rgba(168,137,74,.12)" : "none",
-                padding: "7px 14px", borderRadius: "5px", fontSize: "12.5px",
-                textDecoration: "none", display: "flex", alignItems: "center", gap: "5px",
-                transition: "all .18s", whiteSpace: "nowrap",
-              }}>
-              {icon} {label}
-            </Link>
-          );
-        })}
-      </nav>
 
       {/* Right */}
       <div className="ml-auto flex items-center gap-3">
