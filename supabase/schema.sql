@@ -1,34 +1,118 @@
--- ADF Intranet — Supabase schema
+-- ADF Intranet — Schéma complet v2
 
--- Profiles (auto-créé à l'inscription)
+create table public.entreprises (
+  id uuid default gen_random_uuid() primary key,
+  name text not null,
+  slug text unique,
+  description text,
+  long_description text,
+  address text,
+  city text,
+  country text default 'France',
+  zone text,
+  region text,
+  metier text,
+  metier_label text,
+  color text default '#A8894A',
+  initials text,
+  founded text,
+  certifications text[] default '{}',
+  email text,
+  phone text,
+  website text,
+  adf_url text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table public.entreprises enable row level security;
+create policy "Authenticated users can view entreprises" on public.entreprises for select using (auth.role() = 'authenticated');
+create policy "Authenticated users can insert entreprises" on public.entreprises for insert with check (auth.role() = 'authenticated');
+create policy "Authenticated users can update entreprises" on public.entreprises for update using (auth.role() = 'authenticated');
+
+create table public.savoir_faire (
+  id uuid default gen_random_uuid() primary key,
+  name text not null,
+  description text,
+  created_at timestamptz default now()
+);
+
+alter table public.savoir_faire enable row level security;
+create policy "Authenticated users can view savoir_faire" on public.savoir_faire for select using (auth.role() = 'authenticated');
+create policy "Authenticated users can insert savoir_faire" on public.savoir_faire for insert with check (auth.role() = 'authenticated');
+create policy "Authenticated users can update savoir_faire" on public.savoir_faire for update using (auth.role() = 'authenticated');
+
+create table public.entreprise_savoir_faire (
+  entreprise_id uuid references public.entreprises(id) on delete cascade,
+  savoir_faire_id uuid references public.savoir_faire(id) on delete cascade,
+  primary key (entreprise_id, savoir_faire_id)
+);
+
+alter table public.entreprise_savoir_faire enable row level security;
+create policy "Authenticated users can view liens" on public.entreprise_savoir_faire for select using (auth.role() = 'authenticated');
+create policy "Authenticated users can insert liens" on public.entreprise_savoir_faire for insert with check (auth.role() = 'authenticated');
+create policy "Authenticated users can delete liens" on public.entreprise_savoir_faire for delete using (auth.role() = 'authenticated');
+
+create table public.collaborateurs (
+  id uuid default gen_random_uuid() primary key,
+  entreprise_id uuid references public.entreprises(id) on delete set null,
+  first_name text,
+  last_name text not null,
+  email text,
+  phone text,
+  poste text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table public.collaborateurs enable row level security;
+create policy "Authenticated users can view collaborateurs" on public.collaborateurs for select using (auth.role() = 'authenticated');
+create policy "Authenticated users can insert collaborateurs" on public.collaborateurs for insert with check (auth.role() = 'authenticated');
+create policy "Authenticated users can update collaborateurs" on public.collaborateurs for update using (auth.role() = 'authenticated');
+
+create table public.knowledge_base (
+  id uuid default gen_random_uuid() primary key,
+  title text not null,
+  type text not null check (type in ('rex', 'technique', 'bonnes_pratiques')),
+  description text,
+  content text,
+  source text,
+  entreprise_id uuid references public.entreprises(id) on delete set null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table public.knowledge_base enable row level security;
+create policy "Authenticated users can view kb" on public.knowledge_base for select using (auth.role() = 'authenticated');
+create policy "Authenticated users can insert kb" on public.knowledge_base for insert with check (auth.role() = 'authenticated');
+create policy "Authenticated users can update kb" on public.knowledge_base for update using (auth.role() = 'authenticated');
+
+create table public.kb_savoir_faire (
+  kb_id uuid references public.knowledge_base(id) on delete cascade,
+  savoir_faire_id uuid references public.savoir_faire(id) on delete cascade,
+  primary key (kb_id, savoir_faire_id)
+);
+
+alter table public.kb_savoir_faire enable row level security;
+create policy "Authenticated users can view kb liens" on public.kb_savoir_faire for select using (auth.role() = 'authenticated');
+create policy "Authenticated users can insert kb liens" on public.kb_savoir_faire for insert with check (auth.role() = 'authenticated');
+
 create table public.profiles (
   id uuid references auth.users on delete cascade primary key,
   email text,
   full_name text,
   role text,
-  department text,
-  location text,
-  phone text,
-  avatar_url text,
   created_at timestamptz default now()
 );
 
 alter table public.profiles enable row level security;
+create policy "Users can view all profiles" on public.profiles for select using (auth.role() = 'authenticated');
+create policy "Users can update own profile" on public.profiles for update using (auth.uid() = id);
 
-create policy "Users can view all profiles"
-  on public.profiles for select
-  using (auth.role() = 'authenticated');
-
-create policy "Users can update own profile"
-  on public.profiles for update
-  using (auth.uid() = id);
-
--- Trigger: créer un profil à chaque nouvel utilisateur
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, email)
-  values (new.id, new.email);
+  insert into public.profiles (id, email) values (new.id, new.email);
   return new;
 end;
 $$ language plpgsql security definer;
@@ -36,60 +120,3 @@ $$ language plpgsql security definer;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
-
--- Documents
-create table public.documents (
-  id uuid default gen_random_uuid() primary key,
-  name text not null,
-  category text not null,
-  file_path text,
-  file_size bigint,
-  file_type text,
-  uploaded_by uuid references public.profiles(id),
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-
-alter table public.documents enable row level security;
-
-create policy "Authenticated users can view documents"
-  on public.documents for select
-  using (auth.role() = 'authenticated');
-
-create policy "Authenticated users can insert documents"
-  on public.documents for insert
-  with check (auth.role() = 'authenticated');
-
--- News / Actualités
-create table public.news (
-  id uuid default gen_random_uuid() primary key,
-  title text not null,
-  excerpt text,
-  content text,
-  category text,
-  author_id uuid references public.profiles(id),
-  published_at timestamptz default now(),
-  created_at timestamptz default now()
-);
-
-alter table public.news enable row level security;
-
-create policy "Authenticated users can view news"
-  on public.news for select
-  using (auth.role() = 'authenticated');
-
--- Events
-create table public.events (
-  id uuid default gen_random_uuid() primary key,
-  title text not null,
-  description text,
-  event_date date not null,
-  location text,
-  created_at timestamptz default now()
-);
-
-alter table public.events enable row level security;
-
-create policy "Authenticated users can view events"
-  on public.events for select
-  using (auth.role() = 'authenticated');
