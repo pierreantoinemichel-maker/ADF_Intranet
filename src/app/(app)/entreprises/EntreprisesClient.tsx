@@ -89,7 +89,7 @@ export default function EntreprisesClient({ entreprises }: { entreprises: Entrep
                 color: metier === m ? "var(--gold-l)" : "rgba(255,255,255,.65)",
                 border: "none", width: "100%", textAlign: "left",
               }}>
-              <span className="flex-1">{m === "Tous" ? "Toutes les filiales" : m}</span>
+              <span className="flex-1">{m === "Tous" ? "Toutes les entreprises" : m}</span>
               {m !== "Tous" && (
                 <span style={{ background: "var(--gold)", color: "var(--dark)", fontSize: "9px", padding: "1px 6px", borderRadius: "8px", fontWeight: 600 }}>
                   {metierCounts[m] ?? 0}
@@ -110,7 +110,7 @@ export default function EntreprisesClient({ entreprises }: { entreprises: Entrep
         {/* Page header */}
         <div style={{ padding: "1.5rem 2rem 1rem", borderBottom: "1px solid var(--light)", backgroundColor: "var(--white)", flexShrink: 0 }}>
           <h2 style={{ fontFamily: "var(--font-cormorant)", fontSize: "28px", fontWeight: 300, color: "var(--dark)", lineHeight: 1.1 }}>
-            Annuaire des <em style={{ color: "var(--gold)", fontStyle: "italic" }}>filiales</em>
+            Annuaire des <em style={{ color: "var(--gold)", fontStyle: "italic" }}>entreprises</em>
           </h2>
           <p style={{ fontSize: "12px", color: "var(--mid)", marginTop: "3px" }}>
             Groupe Ateliers de France · {filtered.length} entreprises · savoir-faire d'exception
@@ -131,7 +131,7 @@ export default function EntreprisesClient({ entreprises }: { entreprises: Entrep
         {/* Stats */}
         <div style={{ display: "flex", gap: "1px", background: "var(--light)", borderBottom: "1px solid var(--light)", flexShrink: 0 }}>
           {[
-            { n: entreprises.length, l: "Filiales" },
+            { n: entreprises.length, l: "Entreprises" },
             { n: Object.values(metierCounts).filter(Boolean).length, l: "Métiers" },
             { n: new Set(entreprises.map((e) => e.zone)).size, l: "Zones" },
             { n: entreprises.filter((e) => e.certifications?.includes("EPV")).length, l: "Label EPV" },
@@ -148,7 +148,7 @@ export default function EntreprisesClient({ entreprises }: { entreprises: Entrep
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "14px", alignContent: "start" }}>
             {filtered.length === 0 && (
               <div style={{ gridColumn: "1/-1", padding: "2rem", color: "var(--mid)", textAlign: "center", fontSize: "13px" }}>
-                Aucune filiale ne correspond à vos critères.
+                Aucune entreprise ne correspond à vos critères.
               </div>
             )}
             {filtered.map((e) => {
