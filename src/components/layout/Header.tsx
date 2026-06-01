@@ -28,7 +28,7 @@ export default function Header({ userEmail }: { userEmail?: string }) {
             Ateliers de France
           </div>
           <div style={{ fontSize: "9px", letterSpacing: "2.5px", color: "var(--mid)", textTransform: "uppercase" }}>
-            Intranet groupe
+            La Haute Construction
           </div>
         </div>
       </a>

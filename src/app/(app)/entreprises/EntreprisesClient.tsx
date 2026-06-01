@@ -82,7 +82,7 @@ export default function EntreprisesClient({ entreprises, createEntreprise, archi
                 : <>Annuaire des <em style={{ color: "var(--gold)", fontStyle: "italic" }}>entreprises</em></>}
             </h2>
             <p style={{ fontSize: "12px", color: "var(--mid)", marginTop: "3px" }}>
-              Groupe Ateliers de France · {filtered.length} entreprise{filtered.length > 1 ? "s" : ""}
+              Des artisans au service de la restauration du patrimoine et du luxe · {filtered.length} entreprise{filtered.length > 1 ? "s" : ""}
             </p>
           </div>
           {!showArchived && (
@@ -106,13 +106,13 @@ export default function EntreprisesClient({ entreprises, createEntreprise, archi
       {!showArchived && (
         <div style={{ display: "flex", gap: "1px", background: "var(--light)", borderBottom: "1px solid var(--light)", flexShrink: 0 }}>
           {[
-            { n: active.length, l: "Entreprises" },
-            { n: new Set(active.map((e) => e.metier)).size, l: "Métiers" },
-            { n: new Set(active.map((e) => e.zone)).size, l: "Zones" },
-            { n: active.filter((e) => e.certifications?.includes("EPV")).length, l: "Label EPV" },
+            { n: "850 M€", l: "CA 2025" },
+            { n: "3 000+", l: "Collaborateurs" },
+            { n: "60", l: "Métiers" },
+            { n: "15+", l: "Pays" },
           ].map(({ n, l }) => (
             <div key={l} style={{ flex: 1, background: "var(--white)", padding: ".9rem 1rem", textAlign: "center" }}>
-              <div style={{ fontFamily: "var(--font-cormorant)", fontSize: "24px", fontWeight: 300, color: "var(--gold)" }}>{n}</div>
+              <div style={{ fontFamily: "var(--font-cormorant)", fontSize: "22px", fontWeight: 300, color: "var(--gold)" }}>{n}</div>
               <div style={{ fontSize: "10px", color: "var(--mid)", textTransform: "uppercase", letterSpacing: ".8px" }}>{l}</div>
             </div>
           ))}
