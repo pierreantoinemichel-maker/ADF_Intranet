@@ -1,75 +1,128 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, FileText, LogOut } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-const navItems = [
-  { href: "/", label: "Tableau de bord", icon: LayoutDashboard },
-  { href: "/annuaire", label: "Annuaire", icon: Users },
-  { href: "/documents", label: "Documents", icon: FileText },
+const ZONES = ["France", "Royaume-Uni", "Monde"];
+const METIERS = [
+  "Pierre & Maçonnerie", "Peinture & Décors", "Métal",
+  "Bois", "Décors", "Lots techniques",
+];
+const KB_TYPES = [
+  { key: "rex", label: "Retours chantier", icon: "📋" },
+  { key: "technique", label: "Fiches techniques", icon: "🔧" },
+  { key: "bonnes_pratiques", label: "Bonnes pratiques", icon: "✅" },
+];
+const NAV = [
+  { href: "/entreprises", label: "Annuaire", icon: "🏛" },
+  { href: "/collaborateurs", label: "Collaborateurs", icon: "👥" },
+  { href: "/connaissances", label: "Base de savoirs", icon: "📚" },
 ];
 
-export default function Sidebar() {
+function SidebarInner() {
   const pathname = usePathname();
   const router = useRouter();
-  const supabase = createClient();
+  const searchParams = useSearchParams();
 
-  async function handleSignOut() {
-    await supabase.auth.signOut();
-    router.push("/login");
+  const zone = searchParams.get("zone") ?? "";
+  const metier = searchParams.get("metier") ?? "";
+  const archived = searchParams.get("archived") === "true";
+  const type = searchParams.get("type") ?? "";
+
+  function setParam(key: string, value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) params.set(key, value); else params.delete(key);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }
 
+  const sectionLabel = (label: string) => (
+    <div style={{ fontSize: "9px", letterSpacing: "1.8px", textTransform: "uppercase", color: "var(--mid)", margin: "10px 0 4px", paddingLeft: "10px" }}>
+      {label}
+    </div>
+  );
+
+  const filterBtn = (active: boolean, onClick: () => void, children: React.ReactNode) => (
+    <button onClick={onClick} style={{
+      display: "flex", alignItems: "center", gap: "8px", padding: "5px 10px",
+      borderRadius: "5px", cursor: "pointer", fontSize: "11.5px",
+      background: active ? "rgba(168,137,74,.18)" : "none",
+      color: active ? "var(--gold-l)" : "rgba(255,255,255,.5)",
+      border: "none", width: "100%", textAlign: "left",
+    }}>
+      {children}
+    </button>
+  );
+
   return (
-    <aside className="w-64 min-h-screen flex flex-col" style={{ backgroundColor: "var(--adf-navy)" }}>
-      {/* Logo */}
-      <div className="px-6 py-6 border-b border-white/10">
-        <div className="flex items-center gap-3">
-          <div
-            className="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm"
-            style={{ backgroundColor: "var(--adf-gold)", color: "var(--adf-navy)" }}
-          >
-            ADF
-          </div>
-          <div>
-            <p className="text-white font-semibold text-sm leading-tight">Ateliers de France</p>
-            <p className="text-white/50 text-xs">Intranet</p>
-          </div>
-        </div>
+    <aside style={{ width: "210px", backgroundColor: "var(--dark2)", borderRight: "1px solid rgba(168,137,74,.15)", flexShrink: 0 }}
+      className="overflow-y-auto py-4 px-3">
+
+      <div style={{ fontSize: "9.5px", letterSpacing: "2px", textTransform: "uppercase", color: "var(--mid)", marginBottom: "8px", paddingLeft: "10px" }}>
+        Navigation
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className={cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
-              pathname === href
-                ? "bg-white/20 text-white"
-                : "text-white/70 hover:bg-white/10 hover:text-white"
-            )}
-          >
-            <Icon size={18} />
-            {label}
-          </Link>
-        ))}
+      <nav className="flex flex-col gap-0.5">
+        {NAV.map(({ href, label, icon }) => {
+          const isActive = pathname.startsWith(href);
+          return (
+            <div key={href}>
+              <Link href={href} style={{
+                display: "flex", alignItems: "center", gap: "9px",
+                padding: "8px 10px", borderRadius: "6px", fontSize: "13px",
+                textDecoration: "none", transition: "all .18s",
+                background: isActive ? "rgba(168,137,74,.22)" : "none",
+                color: isActive ? "var(--gold-l)" : "rgba(255,255,255,.65)",
+              }}>
+                <span>{icon}</span>
+                <span className="flex-1">{label}</span>
+                {isActive && <span style={{ fontSize: "8px", opacity: 0.45 }}>▼</span>}
+              </Link>
+
+              {/* Sous-menus Annuaire */}
+              {isActive && href === "/entreprises" && (
+                <div style={{ paddingLeft: "12px", marginBottom: "4px" }}>
+                  {sectionLabel("Zone")}
+                  {ZONES.map((z) => filterBtn(zone === z, () => setParam("zone", zone === z ? "" : z), <span>{z}</span>))}
+
+                  {sectionLabel("Métier")}
+                  {METIERS.map((m) => filterBtn(metier === m, () => setParam("metier", metier === m ? "" : m),
+                    <span className="truncate">{m}</span>
+                  ))}
+
+                  <div style={{ height: "1px", background: "rgba(255,255,255,.07)", margin: "8px 10px 6px" }} />
+                  {filterBtn(archived, () => setParam("archived", archived ? "" : "true"),
+                    <><span>🗄</span><span style={{ color: archived ? "#E07060" : "rgba(255,255,255,.4)" }}>Archivées</span></>
+                  )}
+                </div>
+              )}
+
+              {/* Sous-menus Base de savoirs */}
+              {isActive && href === "/connaissances" && (
+                <div style={{ paddingLeft: "12px", marginBottom: "4px" }}>
+                  {sectionLabel("Contenus")}
+                  {filterBtn(type === "", () => setParam("type", ""), <><span>📚</span><span>Tout</span></>)}
+                  {KB_TYPES.map(({ key, label: kbLabel, icon: kbIcon }) =>
+                    filterBtn(type === key, () => setParam("type", type === key ? "" : key),
+                      <><span>{kbIcon}</span><span className="truncate">{kbLabel}</span></>
+                    )
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </nav>
-
-      {/* Footer */}
-      <div className="px-3 py-4 border-t border-white/10">
-        <button
-          onClick={handleSignOut}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/60 hover:text-white hover:bg-white/10 transition-all w-full"
-        >
-          <LogOut size={18} />
-          Se déconnecter
-        </button>
-      </div>
     </aside>
+  );
+}
+
+export default function Sidebar() {
+  return (
+    <Suspense fallback={
+      <aside style={{ width: "210px", backgroundColor: "var(--dark2)", borderRight: "1px solid rgba(168,137,74,.15)", flexShrink: 0 }} />
+    }>
+      <SidebarInner />
+    </Suspense>
   );
 }
